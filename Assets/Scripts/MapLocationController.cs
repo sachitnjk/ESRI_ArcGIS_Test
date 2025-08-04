@@ -1,6 +1,9 @@
 using Esri.ArcGISMapsSDK.Components;
 using Esri.GameEngine.Geometry;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class MapLocationController : MonoBehaviour
 {
@@ -14,16 +17,82 @@ public class MapLocationController : MonoBehaviour
 	[SerializeField] private double targetLongitude = 78.37873951206078;
 	[SerializeField] private double targetAltitude = 100;
 
+	[Header("UI references")]
+	[SerializeField] private RectTransform InputPanelTransform;
+	[SerializeField] private TMP_InputField latitudeInput;
+	[SerializeField] private TMP_InputField longitudeInput;
+	[SerializeField] private TMP_InputField altitudeInput;
+	[SerializeField] private Button confirmNewInputButton;
+
+	private GameObject inputPanelObject;
+
+	private PlayerInput playerInput;
+	private InputAction tabAction;
+
+	private void Start()
+	{
+		playerInput = InputProvider.GetPlayerInput();
+		if(playerInput != null)
+		{
+			tabAction = playerInput.actions["DebugKey"];
+		}
+
+		if(InputPanelTransform != null)
+		{
+			inputPanelObject = InputPanelTransform.gameObject;
+		}
+
+		if(confirmNewInputButton != null)
+		{
+			confirmNewInputButton.onClick.AddListener(ChangeMapLocation);
+		}
+
+	}
+
+	private void Update()
+	{
+		if(tabAction != null && tabAction.triggered && !inputPanelObject.activeInHierarchy)
+		{
+			inputPanelObject.SetActive(true);
+		}
+	}
+
 	public void ChangeMapLocation()
 	{
-		// Create the new ArcGISPoint
+		// Try to parse latitude
+		if (!double.TryParse(latitudeInput.text, out targetLatitude))
+		{
+			Debug.LogWarning("Invalid latitude input.");
+			return;
+		}
+
+		// Try to parse longitude
+		if (!double.TryParse(longitudeInput.text, out targetLongitude))
+		{
+			Debug.LogWarning("Invalid longitude input.");
+			return;
+		}
+
+		// Try to parse altitude
+		if (!double.TryParse(altitudeInput.text, out targetAltitude))
+		{
+			Debug.LogWarning("Invalid altitude input.");
+			return;
+		}
+
+		// Creating the new ArcGISPoint
 		// NOTE: the ArcGISSpatialReference.WGS84() means that we are specifying ArcGIS to use World GPS cordinates for the passed in targetLongitude and targetLatitude
 		ArcGISPoint newPoint = new ArcGISPoint(targetLongitude, targetLatitude, targetAltitude, ArcGISSpatialReference.WGS84());
 
-		// Step 1: Change the map origin
+		// Changign origin of teh map
 		arcGISMap.OriginPosition = newPoint;
 
-		// Step 2: Move the camera to the same point
+		// Moving teh camera to hte same place as the map
 		arcGISCameraLocation.Position = newPoint;
+
+		if(inputPanelObject.activeInHierarchy)
+		{
+			inputPanelObject.SetActive(false);
+		}
 	}
 }
