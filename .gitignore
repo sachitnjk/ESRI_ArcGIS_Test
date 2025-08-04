@@ -12,6 +12,9 @@
 /[Uu]ser[Ss]ettings/
 *.log
 
+# Ignore ArcGIS package content (managed by UPM)
+Packages/com.esri.arcgis-maps-sdk/
+
 # ArcGIS Map SDK for Unity - Cache & Artifacts
 ArcGISCache/
 *.geodatabase
