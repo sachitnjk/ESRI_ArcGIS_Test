@@ -229,9 +229,54 @@ namespace Esri.ArcGISMapsSDK.Samples.Components
 				return;
 			}
 
-#if !UNITY_EDITOR && (UNITY_IOS || UNITY_ANDROID)
-			DragGamepadEvent();
-#else
+			//#if !UNITY_EDITOR && (UNITY_IOS || UNITY_ANDROID)
+			//			DragGamepadEvent();
+			//#else
+
+#if UNITY_ANDROID || UNITY_IOS
+			if (Input.touchCount > 0 && (Input.GetTouch(0).phase == UnityEngine.TouchPhase.Moved || Input.GetTouch(0).phase == UnityEngine.TouchPhase.Stationary))
+			{
+				Vector2 touchPos = Input.GetTouch(0).position;
+				float screenWidth = Screen.width;
+				float screenHeight = Screen.height;
+
+				double3 direction = double3.zero;
+				// For Global movement
+				var cameraPos = Position;
+				var geoCameraPos = mapComponent.View.WorldToGeographic(cameraPos);
+				var currentENU = mapComponent.View.GetENUReference(cameraPos);
+
+				double3 globalForward = mapComponent.View.GeographicToWorld(new ArcGISPoint(geoCameraPos.X, geoCameraPos.Y + 1.0, geoCameraPos.Z, geoCameraPos.SpatialReference)) - cameraPos;
+				globalForward = math.normalize(globalForward);
+
+				double3 globalRight = mapComponent.View.GeographicToWorld(new ArcGISPoint(geoCameraPos.X + 1.0, geoCameraPos.Y, geoCameraPos.Z, geoCameraPos.SpatialReference)) - cameraPos;
+				globalRight = math.normalize(globalRight);
+
+				if (touchPos.x < screenWidth * 0.25f)
+				{
+					direction = -globalRight;
+				}
+				else if (touchPos.x > screenWidth * 0.75f)
+				{
+					direction = globalRight;
+				}
+				else if (touchPos.y > screenHeight * 0.75f)
+				{
+					direction = globalForward;
+				}
+				else if (touchPos.y < screenHeight * 0.25f)
+				{
+					direction = -globalForward;
+				}
+
+				if (!direction.Equals(double3.zero))
+				{
+					double moveSpeed = 100.0f;
+					MoveCamera(direction * moveSpeed);
+				}
+			}
+#endif
+
 			if (EnableLeftDragging && WasMouseButtonPressed(0) && !MouseOverUI())
 			{
 				isLeftDragging = true;
@@ -251,7 +296,6 @@ namespace Esri.ArcGISMapsSDK.Samples.Components
 			}
 
 			DragMouseEvent();
-#endif
 
 			UpdateNavigation();
 		}
@@ -266,12 +310,14 @@ namespace Esri.ArcGISMapsSDK.Samples.Components
 
 			var totalTranslation = GetTotalTranslation();
 
-			if (IsMousePresent() && GetMouseScollValue() != 0.0 && MouseCanScroll())
-			{
-				var towardsMouse = GetMouseRayCastDirection();
-				var delta = Math.Max(1.0, (altitude - MinCameraHeight)) * MouseScrollSpeed * GetMouseScollValue();
-				totalTranslation += towardsMouse * delta;
-			}
+#if !(UNITY_ANDROID || UNITY_IOS)
+	if (IsMousePresent() && GetMouseScollValue() != 0.0 && MouseCanScroll())
+	{
+		var towardsMouse = GetMouseRayCastDirection();
+		var delta = Math.Max(1.0, (altitude - MinCameraHeight)) * MouseScrollSpeed * GetMouseScollValue();
+		totalTranslation += towardsMouse * delta;
+	}
+#endif
 
 			if (!totalTranslation.Equals(double3.zero))
 			{

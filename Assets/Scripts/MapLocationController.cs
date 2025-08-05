@@ -23,6 +23,7 @@ public class MapLocationController : MonoBehaviour
 	[SerializeField] private TMP_InputField longitudeInput;
 	[SerializeField] private TMP_InputField altitudeInput;
 	[SerializeField] private Button confirmNewInputButton;
+	[SerializeField] private Button mobileLocationSetterButton;
 
 	private GameObject inputPanelObject;
 
@@ -45,6 +46,10 @@ public class MapLocationController : MonoBehaviour
 		if(confirmNewInputButton != null)
 		{
 			confirmNewInputButton.onClick.AddListener(ChangeMapLocation);
+		}
+		if (mobileLocationSetterButton != null)
+		{
+			mobileLocationSetterButton.onClick.AddListener(ToggleInputPanelFromMobile);
 		}
 
 	}
@@ -93,6 +98,18 @@ public class MapLocationController : MonoBehaviour
 		if(inputPanelObject.activeInHierarchy)
 		{
 			inputPanelObject.SetActive(false);
+		}
+	}
+
+	private void ToggleInputPanelFromMobile()
+	{
+		if (inputPanelObject.activeInHierarchy)
+		{
+			inputPanelObject.SetActive(false);
+		}
+		else
+		{
+			inputPanelObject.SetActive(true);
 		}
 	}
 }
